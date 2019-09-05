@@ -8,11 +8,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Calendarro Demo',
+      title: 'Timesheets',
       theme: new ThemeData(
-        primarySwatch: Colors.orange,
+        primarySwatch: Colors.grey,
       ),
-      home: new MyHomePage(title: 'Calendarro Demo'),
+      home: new MyHomePage(title: 'Timesheets'),
     );
   }
 }
@@ -51,7 +51,7 @@ class MyHomePage extends StatelessWidget {
       body: Column(
         children: <Widget>[
           Container(
-            color: Colors.orange,
+            color: Colors.grey[200],
             child: Padding(
               padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
               child: Calendarro(
@@ -60,11 +60,11 @@ class MyHomePage extends StatelessWidget {
                     EdgeInsets.only(top: 10, bottom: 20, left: 20),
                 monthLabelStyle: TextStyle(
                   fontSize: 20.0,
-                  color: Colors.white,
+                  color: Colors.red,
                 ),
                 monthLabelBackArrow: Icon(
                   Icons.arrow_back_ios,
-                  color: Colors.white,
+                  color: Colors.red,
                 ),
                 monthLabelOnTap: () {
                   print("clicked");
@@ -80,7 +80,7 @@ class MyHomePage extends StatelessWidget {
             ),
           ),
           Container(height: 32.0),
-          monthCalendarro
+          //monthCalendarro
         ],
       ),
     );

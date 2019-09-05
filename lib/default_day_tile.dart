@@ -17,10 +17,16 @@ class CalendarroDayItem extends StatelessWidget {
     calendarroState = Calendarro.of(context);
 
     bool daySelected = calendarroState.isDateSelected(date);
+    TextStyle dayNumberStyle = TextStyle(color: textColor);
 
     BoxDecoration boxDecoration;
     if (daySelected) {
-      boxDecoration = BoxDecoration(color: Colors.blue, shape: BoxShape.circle);
+      boxDecoration = BoxDecoration(
+        color: Colors.red,
+        shape: BoxShape.circle,
+      );
+
+      dayNumberStyle = TextStyle(color: Colors.white);
     } else if (isToday) {
       boxDecoration = BoxDecoration(
           border: Border.all(
@@ -32,18 +38,23 @@ class CalendarroDayItem extends StatelessWidget {
 
     return Expanded(
         child: GestureDetector(
-          child: Container(
-              height: 40.0,
-              decoration: boxDecoration,
-              child: Center(
-                  child: Text(
-                    "${date.day}",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: textColor),
-                  ))),
-          onTap: handleTap,
-          behavior: HitTestBehavior.translucent,
-        ));
+      child: Padding(
+        padding: EdgeInsets.only(top: 10.0),
+        child: Container(
+          height: 40.0,
+          decoration: boxDecoration,
+          child: Center(
+            child: Text(
+              "${date.day}",
+              textAlign: TextAlign.center,
+              style: dayNumberStyle,
+            ),
+          ),
+        ),
+      ),
+      onTap: handleTap,
+      behavior: HitTestBehavior.translucent,
+    ));
   }
 
   void handleTap() {
