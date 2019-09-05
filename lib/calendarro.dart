@@ -33,6 +33,11 @@ class Calendarro extends StatefulWidget {
   double dayTileHeight = 40.0;
   double dayLabelHeight = 20.0;
 
+  TextStyle monthLabelStyle;
+  Function monthLabelOnTap;
+  EdgeInsets monthLabelPadding;
+  Icon monthLabelBackArrow;
+
   Calendarro({
     Key key,
     this.startDate,
@@ -44,6 +49,10 @@ class Calendarro extends StatefulWidget {
     this.selectionMode = SelectionMode.SINGLE,
     this.onTap,
     this.weekdayLabelsRow,
+    this.monthLabelStyle,
+    this.monthLabelOnTap,
+    this.monthLabelPadding,
+    this.monthLabelBackArrow,
   }) : super(key: key) {
     if (startDate == null) {
       startDate = DateUtils.getFirstDayOfCurrentMonth();
@@ -75,8 +84,7 @@ class Calendarro extends StatefulWidget {
   @override
   CalendarroState createState() {
     state = CalendarroState(
-        selectedDate: selectedDate,
-        selectedDates: selectedDates);
+        selectedDate: selectedDate, selectedDates: selectedDates);
     return state;
   }
 
@@ -116,14 +124,12 @@ class Calendarro extends StatefulWidget {
 class CalendarroState extends State<Calendarro> {
   DateTime selectedDate;
   List<DateTime> selectedDates;
+  String monthLabel = "";
 
   int pagesCount;
   PageView pageView;
 
-  CalendarroState({
-    this.selectedDate,
-    this.selectedDates
-  });
+  CalendarroState({this.selectedDate, this.selectedDates});
 
   @override
   void initState() {
@@ -132,6 +138,8 @@ class CalendarroState extends State<Calendarro> {
     if (selectedDate == null) {
       selectedDate = widget.startDate;
     }
+
+    monthLabel = getMonthText(widget.selectedDate);
   }
 
   void setSelectedDate(DateTime date) {
@@ -162,6 +170,135 @@ class CalendarroState extends State<Calendarro> {
     });
   }
 
+  Map<String, DateTime> getStartAndEnd(int position) {
+    DateTime pageStartDate;
+    DateTime pageEndDate;
+
+    if (widget.displayMode == DisplayMode.WEEKS) {
+      if (position == 0) {
+        pageStartDate = widget.startDate;
+        pageEndDate = DateUtils.addDaysToDate(
+            widget.startDate, 6 - widget.startDayOffset);
+      } else if (position == pagesCount - 1) {
+        pageStartDate = DateUtils.addDaysToDate(
+            widget.startDate, 7 * position - widget.startDayOffset);
+        pageEndDate = widget.endDate;
+      } else {
+        pageStartDate = DateUtils.addDaysToDate(
+            widget.startDate, 7 * position - widget.startDayOffset);
+        pageEndDate = DateUtils.addDaysToDate(
+            widget.startDate, 7 * position + 6 - widget.startDayOffset);
+      }
+    } else {
+      if (position == 0) {
+        pageStartDate = widget.startDate;
+        if (pagesCount <= 1) {
+          pageEndDate = widget.endDate;
+        } else {
+          var lastDayOfMonth = DateUtils.getLastDayOfMonth(widget.startDate);
+          pageEndDate = lastDayOfMonth;
+        }
+      } else if (position == pagesCount - 1) {
+        pageStartDate = DateUtils.getFirstDayOfMonth(widget.endDate);
+        pageEndDate = widget.endDate;
+      } else {
+        DateTime firstDateOfCurrentMonth =
+            DateUtils.addMonths(widget.startDate, position);
+        pageStartDate = firstDateOfCurrentMonth;
+        pageEndDate = DateUtils.getLastDayOfMonth(firstDateOfCurrentMonth);
+      }
+    }
+
+    return {"start": pageStartDate, "end": pageEndDate};
+  }
+
+  void setMonthLabel(int position) {
+    Map<String, DateTime> dates = getStartAndEnd(position);
+    DateTime pageStartDate = dates["start"];
+
+    setState(() {
+      monthLabel = getMonthText(pageStartDate);
+    });
+  }
+
+  String getMonthText(DateTime dateTime) {
+    String dateString = "";
+
+    switch (dateTime.month) {
+      case 1:
+        {
+          dateString = "January";
+        }
+        break;
+      case 2:
+        {
+          dateString = "Febuary";
+        }
+        break;
+
+      case 3:
+        {
+          dateString = "March";
+        }
+        break;
+      case 4:
+        {
+          dateString = "April";
+        }
+        break;
+      case 5:
+        {
+          dateString = "May";
+        }
+        break;
+      case 6:
+        {
+          dateString = "June";
+        }
+        break;
+      case 7:
+        {
+          dateString = "July";
+        }
+        break;
+      case 8:
+        {
+          dateString = "Augest";
+        }
+        break;
+      case 9:
+        {
+          dateString = "September";
+        }
+        break;
+      case 10:
+        {
+          dateString = "October";
+        }
+        break;
+      case 11:
+        {
+          dateString = "November";
+        }
+        break;
+      case 12:
+        {
+          dateString = "December";
+        }
+        break;
+      default:
+        {
+          dateString = "January";
+        }
+        break;
+    }
+
+    if (widget.selectedDate.year != dateTime.year) {
+      dateString = dateString + ", ${dateTime.year}";
+    }
+    return dateString;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.displayMode == DisplayMode.WEEKS) {
@@ -174,9 +311,11 @@ class CalendarroState extends State<Calendarro> {
     pageView = PageView.builder(
       itemBuilder: (context, position) => buildCalendarPage(position),
       itemCount: pagesCount,
+      onPageChanged: setMonthLabel,
       controller: PageController(
-          initialPage:
-              selectedDate != null ? widget.getPageForDate(selectedDate) : 0),
+        initialPage:
+            selectedDate != null ? widget.getPageForDate(selectedDate) : 0,
+      ),
     );
 
     double widgetHeight;
@@ -184,16 +323,36 @@ class CalendarroState extends State<Calendarro> {
       widgetHeight = widget.dayLabelHeight + widget.dayTileHeight;
     } else {
       var maxWeeksNumber = DateUtils.calculateMaxWeeksNumberMonthly(
-          widget.startDate,
-          widget.endDate);
-      widgetHeight = widget.dayLabelHeight
-          + maxWeeksNumber * widget.dayTileHeight;
+          widget.startDate, widget.endDate);
+      widgetHeight =
+          widget.dayLabelHeight + maxWeeksNumber * widget.dayTileHeight;
     }
 
-    return Container(
-        height: widgetHeight,
-        child: pageView);
-
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Padding(
+          padding: widget.monthLabelPadding ?? EdgeInsets.all(20),
+          child: InkWell(
+            onTap: widget.monthLabelOnTap,
+            child: Row(
+              children: <Widget>[
+                widget.monthLabelBackArrow ?? Container(),
+                Text(
+                  monthLabel,
+                  style: widget.monthLabelStyle,
+                ),
+              ],
+            ),
+          ),
+        ),
+        widget.weekdayLabelsRow,
+        Container(
+          height: widgetHeight,
+          child: pageView,
+        )
+      ],
+    );
   }
 
   Widget buildCalendarPage(int position) {
@@ -224,9 +383,9 @@ class CalendarroState extends State<Calendarro> {
     }
 
     return CalendarroPage(
-        pageStartDate: pageStartDate,
-        pageEndDate: pageEndDate,
-        weekdayLabelsRow: widget.weekdayLabelsRow);
+      pageStartDate: pageStartDate,
+      pageEndDate: pageEndDate,
+    );
   }
 
   Widget buildCalendarPageInMonthsMode(int position) {
@@ -245,9 +404,8 @@ class CalendarroState extends State<Calendarro> {
       pageStartDate = DateUtils.getFirstDayOfMonth(widget.endDate);
       pageEndDate = widget.endDate;
     } else {
-      DateTime firstDateOfCurrentMonth = DateUtils.addMonths(
-          widget.startDate,
-          position);
+      DateTime firstDateOfCurrentMonth =
+          DateUtils.addMonths(widget.startDate, position);
       pageStartDate = firstDateOfCurrentMonth;
       pageEndDate = DateUtils.getLastDayOfMonth(firstDateOfCurrentMonth);
     }
@@ -255,7 +413,6 @@ class CalendarroState extends State<Calendarro> {
     return CalendarroPage(
       pageStartDate: pageStartDate,
       pageEndDate: pageEndDate,
-      weekdayLabelsRow: widget.weekdayLabelsRow,
     );
   }
 
